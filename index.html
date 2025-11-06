@@ -182,31 +182,74 @@ function recomputeTotalIfNeeded() {
 
   if (!/^\d+$/.test(String(numSacchiRaw)) || Number(numSacchiRaw) <= 0) return;
 
-  const prezzoNorm = parseMoneySmart(prezzoRaw);
+  const prezzoNorm = parseMoneySmart(prezzoRaw); // gestisce anche il display con virgola
   if (prezzoNorm === null) return;
 
-  const totaleNum   = Number(numSacchiRaw) * Number(prezzoNorm);
-  const totDisplay  = Number(totaleNum).toFixed(2).replace('.', ',');
+  const totaleNum  = Number(numSacchiRaw) * Number(prezzoNorm);
+  const totDisplay = totaleNum.toFixed(2).replace('.', ',');
 
   settingTotalProgrammatically = true;
   totEl.value = totDisplay;
   settingTotalProgrammatically = false;
 }
+
+// Converte "cifre" (centesimi) in testo con virgola: "590" -> "5,90"
+function formatPosDisplayFromDigits(digits) {
+  if (!digits) return '';
+  // rimuovi zeri a sinistra ma lascia almeno "0"
+  digits = digits.replace(/^0+/, '') || '0';
+
+  if (digits.length === 1) return `0,0${digits}`;
+  if (digits.length === 2) return `0,${digits}`;
+  const intPart = digits.slice(0, -2);
+  const decPart = digits.slice(-2);
+  // separatore delle migliaia opzionale (non necessario su mobile)
+  return `${intPart},${decPart}`;
+}
+
+// Ritorna un numero normalizzato con PUNTO e 2 decimali da sole cifre: "590" -> "5.90"
+function normalizedFromDigits(digits) {
+  if (!/^\d+$/.test(digits)) return null;
+  return (Number(digits) / 100).toFixed(2); // "5.90"
+}
   
+// Parser “smart”: accetta solo cifre (POS) o formati classici con virgola/punto
 function parseMoneySmart(value) {
   const raw = String(value || '').trim();
+  if (raw === '') return null;
 
-  // Solo cifre: interpretazione POS in centesimi (es. 590 -> 5.90)
-  if (/^\d+$/.test(raw)) {
-    const cents = Number(raw);
-    const euros = (cents / 100).toFixed(2);
-    return euros; // "5.90"
-  }
+  // Solo cifre → interpretazione come centesimi
+  if (/^\d+$/.test(raw)) return normalizedFromDigits(raw);
 
   // Formati classici con virgola/punto (max 2 decimali)
   const s = raw.replace(',', '.');
   if (!/^\d+(\.\d{1,2})?$/.test(s)) return null;
   return Number(s).toFixed(2);
+}
+
+// Gestore "live POS": mantiene solo cifre, aggiorna display con virgola ad ogni input
+function attachPosMoney(el, { onChange } = {}) {
+  el.addEventListener('input', () => {
+    // prendi solo cifre dall’input
+    const digits = (el.value || '').replace(/\D/g, '');
+    // trasforma in display con virgola
+    const display = formatPosDisplayFromDigits(digits);
+    const selectionToEnd = document.activeElement === el;
+
+    // aggiorna il campo (mostra la virgola mentre si digita)
+    const prevLen = el.value.length;
+    el.value = display;
+
+    // metti il cursore alla fine (comportamento tipico POS su mobile)
+    if (selectionToEnd) {
+      try { el.setSelectionRange(el.value.length, el.value.length); } catch {}
+    }
+
+    // callback con valore normalizzato "5.90" (o null se vuoto)
+    if (typeof onChange === 'function') {
+      onChange(digits ? normalizedFromDigits(digits) : null);
+    }
+  });
 }
 
 function onBlurMoneyInput(ev) {
@@ -249,10 +292,10 @@ async function onSaveClick() {
     msg.textContent='Numero sacchi non valido (intero > 0).'; msg.className='err'; return;
   }
 
-  const prezzoNorm = parseMoneySmart(prezzoRaw);
+  const prezzoNorm = parseMoneySmart(document.getElementById('prezzo').value);
   if (prezzoNorm === null){ msg.textContent='Prezzo non valido.'; msg.className='err'; return; }
 
-  const totaleNorm = parseMoneySmart(totaleRaw);
+  const totaleNorm = parseMoneySmart(document.getElementById('totale').value);
   if (totaleNorm === null){ msg.textContent='Totale non valido.'; msg.className='err'; return; }
 
   const payload = {
@@ -291,38 +334,40 @@ document.addEventListener('DOMContentLoaded', () => {
   showAppVersion();
   initDate();
 
-  // Riferimenti ai campi
-  const saveBtn   = document.getElementById('saveBtn');
-  const numEl     = document.getElementById('numSacchi');
-  const prezzoEl  = document.getElementById('prezzo');
-  const totEl     = document.getElementById('totale');
+  const saveBtn  = document.getElementById('saveBtn');
+  const numEl    = document.getElementById('numSacchi');
+  const prezzoEl = document.getElementById('prezzo');
+  const totEl    = document.getElementById('totale');
 
   // Salvataggio
   saveBtn.addEventListener('click', onSaveClick);
 
-  // Normalizza i campi monetari al blur (virgola, 2 decimali)
-  prezzoEl.addEventListener('blur', onBlurMoneyInput);
-  totEl.addEventListener('blur', onBlurMoneyInput);
-
-  // Auto-calcolo del totale (se l'utente non l'ha modificato manualmente)
-  numEl.addEventListener('input',  recomputeTotalIfNeeded);
-  prezzoEl.addEventListener('input', recomputeTotalIfNeeded);
-
-  // Se l’utente modifica manualmente il totale, blocca l’auto-calcolo.
-  // Se lo svuota, riattivalo e ricalcola subito.
-  totEl.addEventListener('input', () => {
-    if (settingTotalProgrammatically) return; // ignora quando lo impostiamo noi
-    const hasValue = totEl.value.trim() !== '';
-    userEditedTotal = hasValue;
-    if (!hasValue) recomputeTotalIfNeeded();  // riattiva e ricalcola appena svuotato
+  // Formattazione "live POS" su PREZZO e TOTALE
+  attachPosMoney(prezzoEl, {
+    onChange: () => {
+      // ogni cambiamento del prezzo prova a ricalcolare
+      recomputeTotalIfNeeded();
+    }
   });
 
-  // (facoltativo) Prova un primo calcolo se numero sacchi/prezzo sono già valorizzati
+  attachPosMoney(totEl, {
+    onChange: (norm) => {
+      // se l’utente digita nel TOTALE, blocca l’autocalcolo; se lo svuota, riattivalo
+      if (settingTotalProgrammatically) return;
+      const hasValue = norm !== null;
+      userEditedTotal = hasValue;
+      if (!hasValue) recomputeTotalIfNeeded();
+    }
+  });
+
+  // L’autocalcolo scatta anche al cambio del numero sacchi
+  numEl.addEventListener('input', recomputeTotalIfNeeded);
+
+  // Primo tentativo di calcolo (se i campi sono già valorizzati)
   recomputeTotalIfNeeded();
 });
 
 </script>
 </body>
 </html>
-
 
