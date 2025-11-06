@@ -69,6 +69,39 @@
 </head>
 
 <body>
+
+  <!-- ─── Top bar con hamburger ─────────────────────────────── -->
+<header style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+  <button id="menuBtn" aria-label="Apri menu" style="width:auto;padding:8px 10px;border-radius:8px;">
+    ☰
+  </button>
+  <h2 style="margin:0;">🔥 Pellet</h2>
+</header>
+
+<!-- Drawer semplice -->
+<nav id="drawer" style="
+  position:fixed;inset:0 35% 0 0;max-width:280px;background:#fff;border-right:1px solid #eee;
+  transform:translateX(-105%);transition:transform .2s ease;z-index:9998;padding:16px;">
+  <h3 style="margin-top:0;">Menu</h3>
+  <ul style="list-style:none;padding:0;margin:0;">
+    <li><a href="lista.html?v=<?=Date.now?>">📄 Lista movimenti</a></li>
+  </ul>
+</nav>
+<div id="backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,.15);display:none;z-index:9997;"></div>
+
+  <script>
+  // Drawer toggle
+  (function(){
+    const btn = document.getElementById('menuBtn');
+    const drawer = document.getElementById('drawer');
+    const backdrop = document.getElementById('backdrop');
+    const open = () => { drawer.style.transform='translateX(0)'; backdrop.style.display='block'; };
+    const close= () => { drawer.style.transform='translateX(-105%)'; backdrop.style.display='none'; };
+    btn.addEventListener('click', open);
+    backdrop.addEventListener('click', close);
+  })();
+</script>
+  
   <h2>🔥 Pellet</h2>
 
   <label>Data</label>
@@ -370,4 +403,5 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
