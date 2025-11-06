@@ -165,6 +165,37 @@ function setLoading(isLoading) {
 /*───────────────────────────────*
  *   FORMATTATORI / VALIDAZIONI  *
  *───────────────────────────────*/
+let userEditedTotal = false;
+let settingTotalProgrammatically = false;
+
+function toMoneyDisplayFromNumber(n) {
+  // n è Number; ritorna stringa con virgola e due decimali
+  return Number(n).toFixed(2).replace('.', ',');
+}
+
+function recomputeTotalIfNeeded() {
+  // non ricalcolare se l'utente ha modificato Totale, a meno che sia vuoto
+  const totEl = document.getElementById('totale');
+  if (userEditedTotal && totEl.value.trim() !== '') return;
+
+  const numSacchiRaw = document.getElementById('numSacchi').value;
+  const prezzoRaw = document.getElementById('prezzo').value;
+
+  if (!/^\d+$/.test(String(numSacchiRaw)) || Number(numSacchiRaw) <= 0) return;
+
+  // normalizza prezzo (virgola -> punto) e valida max 2 decimali
+  const prezzoNorm = sanitizeMoney(prezzoRaw);
+  if (prezzoNorm === null) return;
+
+  const totaleNum = Number(numSacchiRaw) * Number(prezzoNorm);
+  const totDisplay = toMoneyDisplayFromNumber(totaleNum);
+
+  // Imposta senza segnare "userEditedTotal"
+  settingTotalProgrammatically = true;
+  totEl.value = totDisplay;
+  settingTotalProgrammatically = false;
+}
+  
 function sanitizeMoney(value) {
   // accetta "12", "12.3", "12,34" → ritorna stringa con '.' come separatore
   const s = String(value || '').trim().replace(',', '.');
@@ -175,6 +206,7 @@ function sanitizeMoney(value) {
 function onBlurMoneyInput(ev) {
   const norm = sanitizeMoney(ev.target.value);
   if (norm !== null) ev.target.value = norm.replace('.', ','); // mostra con virgola
+  if (ev.target.id === 'prezzo') recomputeTotalIfNeeded();
 }
 
 function isPositiveInteger(str) {
@@ -253,7 +285,29 @@ document.addEventListener('DOMContentLoaded', () => {
   // normalizza visualmente i campi monetari a due decimali all'uscita dal campo
   document.getElementById('prezzo').addEventListener('blur', onBlurMoneyInput);
   document.getElementById('totale').addEventListener('blur', onBlurMoneyInput);
+
+  document.getElementById('numSacchi').addEventListener('input', () => {
+    // ogni cambio di numero sacchi prova a ricalcolare
+    recomputeTotalIfNeeded();
+  });
+
+  document.getElementById('prezzo').addEventListener('input', () => {
+    // ricalcolo "live" (tollerante: calcola solo quando valido)
+    recomputeTotalIfNeeded();
+  });
+
+  // Se l'utente tocca/modifica manualmente il totale, non auto-sovrascrivere più
+  const totEl = document.getElementById('totale');
+  totEl.addEventListener('input', () => {
+    if (settingTotalProgrammatically) return; // ignora quando lo settiamo noi
+    userEditedTotal = totEl.value.trim() !== '';
+  });
+
+  // Se esce dal campo totale, normalizza a due decimali (se valido)
+  totEl.addEventListener('blur', onBlurMoneyInput);
+  
 });
 </script>
 </body>
 </html>
+
