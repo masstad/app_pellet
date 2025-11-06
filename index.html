@@ -84,7 +84,7 @@
   transform:translateX(-105%);transition:transform .2s ease;z-index:9998;padding:16px;">
   <h3 style="margin-top:0;">Menu</h3>
   <ul style="list-style:none;padding:0;margin:0;">
-    <li><a href="lista.html?v=<?=Date.now?>">📄 Lista movimenti</a></li>
+    <li><a id="goLista" href="lista.html">📄 Lista movimenti</a></li>
   </ul>
 </nav>
 <div id="backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,.15);display:none;z-index:9997;"></div>
@@ -100,6 +100,18 @@
     btn.addEventListener('click', open);
     backdrop.addEventListener('click', close);
   })();
+</script>
+
+  <script>
+  // stessa formattazione usata in index.html
+  function formatVersionFromDate(d){
+    const p=n=>String(n).padStart(2,'0');
+    return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())}-${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
+  // versione della index, basata sul suo lastModified
+  const vIndex = formatVersionFromDate(new Date(document.lastModified));
+  const link = document.getElementById('goLista');
+  if (link) link.href = `lista.html?v=${encodeURIComponent(vIndex)}`;
 </script>
   
   <h2>🔥 Pellet</h2>
@@ -403,5 +415,6 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
