@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lista movimenti • Pellet</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <style>
+    :root { --space:14px; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: var(--space); }
+    h2 { margin: 0 0 10px; }
+    .muted { color:#666; font-size:12px; }
+    .toolbar { display:flex; gap:8px; align-items:center; margin:8px 0 14px; }
+    .toolbar a, .toolbar button {
+      padding:8px 12px; border:1px solid #ddd; border-radius:10px; background:#fff; cursor:pointer; text-decoration:none; color:inherit;
+    }
+    table { width:100%; border-collapse: collapse; }
+    th, td { text-align:left; padding:10px; border-bottom:1px solid #eee; font-size:15px; }
+    th { font-weight:600; }
+    .right { text-align:right; }
+    .loading { margin-top:10px; }
+    .err { color:#b00020; margin-top:8px; }
+    .badge { display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid #aaa; margin-left:8px; }
+    .summary { margin-top:10px; font-size:14px; }
+  </style>
+</head>
+<body>
+  <header class="toolbar">
+    <a href="index.html" aria-label="Torna all'inserimento">← Nuovo movimento</a>
+    <button id="refreshBtn" aria-label="Ricarica elenco">Ricarica</button>
+    <div style="margin-left:auto" class="muted">Versione: <span id="appVersion" class="badge"></span></div>
+  </header>
+
+  <h2>📄 Lista movimenti</h2>
+  <div id="status" class="loading">Carico…</div>
+
+  <table id="tbl" aria-live="polite" style="display:none;">
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th class="right">Num. sacchi</th>
+        <th class="right">Totale (€)</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div id="summary" class="summary" style="display:none;"></div>
+
+<script>
+/* ─── Endpoint condiviso con index.html ───────────────────── */
+const ENDPOINT = 'https://script.google.com/macros/s/AKfycbwven5iCbDk8Fy0Vw7l7jQL2FHY1kTM05TlnAk8N3yE4-NfDjh052fPSbS7Vr4Qgf7l9A/exec';
+const SECRET   = 'aX4P-92kLq-55T8b-7Hc0Z';
+
+/* Versione come in index.html */
+function formatVersionFromDate(d){ const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())}-${p(d.getHours())}:${p(d.getMinutes())}`; }
+function computeAppVersion(){ const qs = new URLSearchParams(location.search); const v = qs.get('v'); if (v) return v; const d = new Date(document.lastModified); return isNaN(d)?'dev':formatVersionFromDate(d); }
+document.getElementById('appVersion').textContent = computeAppVersion();
+
+/* Util per formattare € con virgola */
+function euro(x){ return Number(x).toFixed(2).replace('.', ','); }
+
+/* Carica lista */
+async function loadList(){
+  const status = document.getElementById('status');
+  const tbl = document.getElementById('tbl');
+  const tbody = tbl.querySelector('tbody');
+  const summary = document.getElementById('summary');
+
+  status.textContent = 'Carico…';
+  status.className = 'loading';
+  tbl.style.display = 'none';
+  summary.style.display = 'none';
+  tbody.innerHTML = '';
+
+  try {
+    const url = new URL(ENDPOINT);
+    url.searchParams.set('action','list');
+    url.searchParams.set('secret', SECRET);
+
+    const res = await fetch(url.toString(), { method:'GET' });
+    if (!res.ok) throw new Error('HTTP '+res.status);
+    const json = await res.json();
+    if (!json.ok) throw new Error(json.error || 'Risposta non valida');
+
+    const rows = json.rows || [];
+    if (rows.length === 0) {
+      status.textContent = 'Nessun movimento.';
+      status.className = 'muted';
+      return;
+    }
+
+    // opzionale: ordina per data discendente (assumendo formato YYYY-MM-DD)
+    rows.sort((a,b) => (a.data < b.data ? 1 : -1));
+
+    let somma = 0, sacchi = 0;
+    for (const r of rows) {
+      const tr = document.createElement('tr');
+      const tdData    = document.createElement('td');
+      const tdSacchi  = document.createElement('td');
+      const tdTotale  = document.createElement('td');
+
+      tdData.textContent = r.data;
+      tdSacchi.textContent = r.num_sacchi;
+      tdTotale.textContent = euro(r.totale);
+
+      tdSacchi.className = 'right';
+      tdTotale.className = 'right';
+
+      tr.appendChild(tdData);
+      tr.appendChild(tdSacchi);
+      tr.appendChild(tdTotale);
+      tbody.appendChild(tr);
+
+      somma += Number(r.totale || 0);
+      sacchi += Number(r.num_sacchi || 0);
+    }
+
+    status.textContent = '';
+    status.className = '';
+    tbl.style.display = 'table';
+    summary.textContent = `Totale movimenti: ${rows.length} • Sacchi: ${sacchi} • Spesa: € ${euro(somma)}`;
+    summary.style.display = 'block';
+  } catch (err) {
+    status.textContent = 'Errore nel caricamento. Sei offline o non autorizzato.';
+    status.className = 'err';
+  }
+}
+
+document.getElementById('refreshBtn').addEventListener('click', loadList);
+
+// Avvio
+document.addEventListener('DOMContentLoaded', loadList);
+</script>
+</body>
+</html>
