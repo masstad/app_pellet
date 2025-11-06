@@ -14,9 +14,18 @@
     h2 { margin: 0 0 10px; }
     .muted { color:#666; font-size:12px; }
     .toolbar { display:flex; gap:8px; align-items:center; margin:8px 0 14px; }
-    .toolbar a, .toolbar button {
-      padding:8px 12px; border:1px solid #ddd; border-radius:10px; background:#fff; cursor:pointer; text-decoration:none; color:inherit;
-    }
+    /* Stile uniforme per link e button */
+.btn{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:8px 12px;
+  border:1px solid #ddd; border-radius:10px; background:#fff;
+  text-decoration:none; color:inherit; cursor:pointer;
+  font: inherit; line-height:1;
+  appearance:none; -webkit-appearance:none; /* uniforma i button */
+}
+.btn:hover{ background:#f7f7f7; }
+.btn:active{ transform:translateY(1px); }
+.btn:focus-visible{ outline:2px solid #2684ff; outline-offset:2px; }
     table { width:100%; border-collapse: collapse; }
     th, td { text-align:left; padding:10px; border-bottom:1px solid #eee; font-size:15px; }
     th { font-weight:600; }
@@ -29,10 +38,11 @@
 </head>
 <body>
   <header class="toolbar">
-    <a href="index.html" aria-label="Torna all'inserimento">← Nuovo movimento</a>
-    <button id="refreshBtn" aria-label="Ricarica elenco">Ricarica</button>
-    <div style="margin-left:auto" class="muted">Versione: <span id="appVersion" class="badge"></span></div>
-  </header>
+  <a class="btn" href="index.html" aria-label="Torna all'inserimento">← Nuovo movimento</a>
+  <button class="btn" id="refreshBtn" type="button" aria-label="Ricarica elenco">⟳ Ricarica</button>
+  <div style="margin-left:auto" class="muted">Versione: <span id="appVersion" class="badge"></span></div>
+</header>
+
 
   <h2>📄 Lista movimenti</h2>
   <div id="status" class="loading">Carico…</div>
@@ -137,3 +147,4 @@ document.addEventListener('DOMContentLoaded', loadList);
 </script>
 </body>
 </html>
+
