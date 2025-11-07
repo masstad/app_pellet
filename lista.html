@@ -54,7 +54,9 @@
 <body>
   
 <header class="toolbar">
-  <a class="btn" href="index.html" aria-label="Torna all'inserimento">← Nuovo movimento</a>
+  <!-- <a class="btn" href="index.html" aria-label="Torna all'inserimento">← Nuovo movimento</a> -->
+  <a class="btn" id="backBtn" href="index.html" target="_self" aria-label="Torna all'inserimento">← Nuovo movimento</a>
+
   <button class="btn" id="refreshBtn" type="button" aria-label="Ricarica elenco">⟳ Ricarica</button>
 
   <!-- Filtro stagione -->
@@ -191,8 +193,27 @@ document.getElementById('seasonFilter').addEventListener('change', e => {
 document.addEventListener('DOMContentLoaded', loadList);
 </script>
 
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+  const back = document.getElementById('backBtn');
+  if (!back) return;
+
+  back.addEventListener('click', (e) => {
+    // Se lista.html è aperta DENTRO l'iframe della index (overlay full-screen)
+    if (window.top !== window.self) {
+      e.preventDefault();                 // non navigare
+      window.top.postMessage('close-lista', '*'); // chiedi alla index di chiudere l'overlay
+      return;
+    }
+    // Se lista.html è aperta da sola (Safari), il link funziona normalmente verso index.html
+  });
+});
+</script>
+
+
 </body>
 </html>
+
 
 
 
