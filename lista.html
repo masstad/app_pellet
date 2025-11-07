@@ -7,83 +7,147 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Pellet">
   <title>Lista movimenti • Pellet</title>
-  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <!-- No-cache -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
+
   <style>
     :root { --space:14px; }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: var(--space); }
+
+    /* ===== Reset + layout di pagina (come index) ========================== */
+    * { box-sizing: border-box; }
+    html, body { width:100%; max-width:100%; overflow-x:hidden; margin:0; }
+    body{
+      min-height:100dvh;
+      display:flex;
+      flex-direction:column;
+      padding: var(--space);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background:#fff;
+    }
+
+    /* Contenitore centrale (facoltativo, per max larghezza su schermi grandi) */
+    .container { width:100%; max-width:640px; margin:0 auto; }
+
+    /* ===== Topbar con titolo centrato ==================================== */
+    .topbar{
+      display:grid;
+      grid-template-columns:48px 1fr 48px;  /* sx / centro / dx (slot vuoti) */
+      align-items:center;
+      height:48px;
+      margin-bottom:10px;
+    }
+    .title{
+      grid-column:2;
+      margin:0;
+      text-align:center;
+      font-size:22px;
+      font-weight:700;
+    }
+
+    /* Riga filtro stagione (destra) */
+    .season-row{
+      display:flex;
+      justify-content:flex-end;
+      margin:8px 0 12px;
+      /* separatore tra filtro e lista */
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+      margin-bottom: 16px;
+    }
+    .sel{
+      padding:8px 12px;
+      border:1px solid #ddd;
+      border-radius:10px;
+      background:#fff;
+      font:inherit;
+      line-height:1.2;
+      cursor:pointer;
+    }
+    .sel:focus-visible{ outline:2px solid #2684ff; outline-offset:2px; }
+
+    /* ===== Tabella (lasciata minimalista) ================================ */
     h2 { margin: 0 0 10px; }
     .muted { color:#666; font-size:12px; }
-    .toolbar { display:flex; gap:8px; align-items:center; margin:8px 0 14px; }
-    /* Stile uniforme per link e button */
-.btn{
-  display:inline-flex; align-items:center; gap:6px;
-  padding:8px 12px;
-  border:1px solid #ddd; border-radius:10px; background:#fff;
-  text-decoration:none; color:inherit; cursor:pointer;
-  font: inherit; line-height:1;
-  appearance:none; -webkit-appearance:none; /* uniforma i button */
-}
-.btn:hover{ background:#f7f7f7; }
-.btn:active{ transform:translateY(1px); }
-.btn:focus-visible{ outline:2px solid #2684ff; outline-offset:2px; }
     table { width:100%; border-collapse: collapse; }
     th, td { text-align:left; padding:10px; border-bottom:1px solid #eee; font-size:15px; }
     th { font-weight:600; }
     .right { text-align:right; }
     .loading { margin-top:10px; }
     .err { color:#b00020; margin-top:8px; }
-    .badge { display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid #aaa; margin-left:8px; }
     .summary { margin-top:10px; font-size:14px; }
-    /* Stile coerente per il filtro stagione */
-  .sel{
-    padding:8px 12px;
-    border:1px solid #ddd;
-    border-radius:10px;
-    background:#fff;
-    font:inherit;
-    line-height:1.2;
-    cursor:pointer;
-  }
-  .sel:focus-visible{ outline:2px solid #2684ff; outline-offset:2px; }
 
+    .badge { display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid #aaa; margin-left:8px; font-variant-numeric: tabular-nums; }
+
+    /* ===== Bottoni ======================================================== */
+    .btn{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:10px 14px;
+      border:1px solid #ddd; border-radius:12px; background:#fff;
+      text-decoration:none; color:inherit; cursor:pointer;
+      font: inherit; line-height:1;
+      appearance:none; -webkit-appearance:none;
+    }
+    .btn:hover{ background:#f7f7f7; }
+    .btn:active{ transform:translateY(1px); }
+    .btn:focus-visible{ outline:2px solid #2684ff; outline-offset:2px; }
+
+    /* Barra azioni in basso (sopra la versione) */
+    .actions-footer{
+      display:flex; gap:10px; justify-content:center;
+      margin-top:auto;               /* spinge in basso le azioni */
+      padding-top:12px;
+    }
+
+    /* Versione centrata in fondo alla pagina */
+    .version-footer{
+      text-align:center;
+      padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+      width:100%;
+    }
   </style>
 </head>
 <body>
-  
-<header class="toolbar">
-  <!-- <a class="btn" href="index.html" aria-label="Torna all'inserimento">← Nuovo movimento</a> -->
-  <a class="btn" id="backBtn" href="index.html" target="_self" aria-label="Torna all'inserimento">← Nuovo movimento</a>
 
-  <button class="btn" id="refreshBtn" type="button" aria-label="Ricarica elenco">⟳ Ricarica</button>
+  <!-- HEADER: icona + label centrati -->
+  <header class="topbar container">
+    <h1 class="title">📄 Lista movimenti</h1>
+  </header>
 
-  <!-- Filtro stagione -->
-  <select id="seasonFilter" class="sel" aria-label="Filtra per stagione" title="Filtra per stagione">
-    <option value="">Tutte le stagioni</option>
-  </select>
+  <main class="container" role="main">
+    <!-- Filtro stagione in alto a destra -->
+    <div class="season-row">
+      <select id="seasonFilter" class="sel" aria-label="Filtra per stagione" title="Filtra per stagione">
+        <option value="">Tutte le stagioni</option>
+      </select>
+    </div>
 
-  <div style="margin-left:auto" class="muted">Versione: <span id="appVersion" class="badge"></span></div>
-</header>
+    <div id="status" class="loading">Carico…</div>
 
+    <table id="tbl" aria-live="polite" style="display:none;">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th class="right">Num. sacchi</th>
+          <th class="right">Totale (€)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
 
+    <div id="summary" class="summary" style="display:none;"></div>
+  </main>
 
-  <h2>📄 Lista movimenti</h2>
-  <div id="status" class="loading">Carico…</div>
+  <!-- AZIONI: in basso sopra la versione -->
+  <div class="actions-footer container">
+    <a class="btn" id="backBtn" href="index.html" target="_self" aria-label="Torna all'inserimento">← Nuovo movimento</a>
+    <button class="btn" id="refreshBtn" type="button" aria-label="Ricarica elenco">⟳ Ricarica</button>
+  </div>
 
-  <table id="tbl" aria-live="polite" style="display:none;">
-    <thead>
-      <tr>
-        <th>Data</th>
-        <th class="right">Num. sacchi</th>
-        <th class="right">Totale (€)</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <div id="summary" class="summary" style="display:none;"></div>
+  <!-- Versione in fondo e centrata -->
+  <div class="version-footer muted">Versione: <span id="appVersion" class="badge"></span></div>
 
 <script>
 const ENDPOINT = 'https://script.google.com/macros/s/AKfycbwven5iCbDk8Fy0Vw7l7jQL2FHY1kTM05TlnAk8N3yE4-NfDjh052fPSbS7Vr4Qgf7l9A/exec';
@@ -193,7 +257,7 @@ document.getElementById('seasonFilter').addEventListener('change', e => {
 document.addEventListener('DOMContentLoaded', loadList);
 </script>
 
-  <script>
+<script>
 document.addEventListener('DOMContentLoaded', () => {
   const back = document.getElementById('backBtn');
   if (!back) return;
@@ -201,19 +265,14 @@ document.addEventListener('DOMContentLoaded', () => {
   back.addEventListener('click', (e) => {
     // Se lista.html è aperta DENTRO l'iframe della index (overlay full-screen)
     if (window.top !== window.self) {
-      e.preventDefault();                 // non navigare
-      window.top.postMessage('close-lista', '*'); // chiedi alla index di chiudere l'overlay
+      e.preventDefault();
+      window.top.postMessage('close-lista', '*'); // chiedi alla index di chiudere l’overlay
       return;
     }
-    // Se lista.html è aperta da sola (Safari), il link funziona normalmente verso index.html
+    // Se aperta stand-alone, il link naviga verso index.html normalmente
   });
 });
 </script>
 
-
 </body>
 </html>
-
-
-
-
