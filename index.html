@@ -110,8 +110,9 @@
   }
   // versione della index, basata sul suo lastModified
   const vIndex = formatVersionFromDate(new Date(document.lastModified));
-  //const link = document.getElementById('goLista');
   const urlLista = `lista.html?v=${encodeURIComponent(vIndex)}`;
+
+  const linkLista = document.getElementById('goLista');
 
   if (linkLista) {
     linkLista.addEventListener('click', async (e) => {
@@ -437,6 +438,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
 
