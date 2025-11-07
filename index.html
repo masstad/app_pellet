@@ -111,7 +111,21 @@
   // versione della index, basata sul suo lastModified
   const vIndex = formatVersionFromDate(new Date(document.lastModified));
   const link = document.getElementById('goLista');
-  if (link) link.href = `lista.html?v=${encodeURIComponent(vIndex)}`;
+
+  if (link) {
+    // 1️⃣ imposta l'href con la versione, utile anche su GitHub Pages
+    const urlLista = `lista.html?v=${encodeURIComponent(vIndex)}`;
+    link.href = urlLista;
+
+    // 2️⃣ intercetta il click quando l'app è aperta come "app" (standalone)
+    link.addEventListener('click', function (e) {
+      if (window.navigator.standalone) { // true solo se aperta da Home su iPhone
+        e.preventDefault();
+        window.location.href = urlLista; // apre dentro l'app, fullscreen
+      }
+      // se non è standalone, Safari gestirà il link normalmente
+    });
+  }
 </script>
   
   <h2>🔥 Pellet</h2>
@@ -415,6 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
 
