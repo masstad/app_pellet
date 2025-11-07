@@ -170,6 +170,19 @@
     }
     .fab-menu:active{ transform: translateY(1px); }
     .fab-menu:focus-visible{ outline: 2px solid #2684ff; outline-offset: 2px; }
+
+    /* transizione morbida */
+    .fab-menu{
+      transition: opacity .15s ease, transform .15s ease;
+    }
+    
+    /* nascondi quando il drawer è aperto o l’iframe è in overlay */
+    body.drawer-open .fab-menu,
+    body.frame-open .fab-menu{
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px);
+    }
     
   </style>
 </head>
@@ -208,8 +221,16 @@
     const drawer = document.getElementById('drawer');
     const backdrop = document.getElementById('backdrop');
     
-    const open = () => { drawer.style.transform='translateX(0)'; backdrop.style.display='block'; };
-    const close= () => { drawer.style.transform='translateX(-105%)'; backdrop.style.display='none'; };
+    const open = () => {
+      drawer.style.transform='translateX(0)';
+      backdrop.style.display='block';
+      document.body.classList.add('drawer-open');      // 👈 NEW
+    };
+    const close= () => {
+      drawer.style.transform='translateX(-105%)';
+      backdrop.style.display='none';
+      document.body.classList.remove('drawer-open');   // 👈 NEW
+    };
 
     btn.addEventListener('click', open);
     if (btnBottom) btnBottom.addEventListener('click', open);
@@ -240,9 +261,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // chiudi il drawer, mostra l’iframe a schermo intero
     if (drawer)  drawer.style.transform = 'translateX(-105%)';
     if (backdrop) backdrop.style.display = 'none';
+    document.body.classList.remove('drawer-open');
 
     frame.src = url;
     frame.style.display = 'block';
+    document.body.classList.add('frame-open');
 
     // gestisci cronologia: Back chiude l’iframe
     history.pushState({page:'lista'}, '', '#lista');
@@ -251,6 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function closeFrame(){
     frame.style.display = 'none';
     frame.src = 'about:blank';
+    document.body.classList.remove('frame-open');
     if (location.hash === '#lista') history.back();
   }
 
@@ -269,6 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (frame.style.display === 'block') {
       frame.style.display = 'none';
       frame.src = 'about:blank';
+      document.body.classList.remove('frame-open');
     }
   });
 
@@ -588,6 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
 </body>
 </html>
+
 
 
 
