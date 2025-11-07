@@ -183,7 +183,7 @@
 </nav>
 <div id="backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,.15);display:none;z-index:9997;"></div>
 
-  <script>
+<script>
   // Drawer toggle
   (function(){
     const btn = document.getElementById('menuBtn');
@@ -191,8 +191,13 @@
     const backdrop = document.getElementById('backdrop');
     const open = () => { drawer.style.transform='translateX(0)'; backdrop.style.display='block'; };
     const close= () => { drawer.style.transform='translateX(-105%)'; backdrop.style.display='none'; };
+
     btn.addEventListener('click', open);
     backdrop.addEventListener('click', close);
+
+    // NEW: chiusura dal bottone “←” in basso a sinistra
+    const drawerClose = document.getElementById('drawerClose');
+    if (drawerClose) drawerClose.addEventListener('click', close);
   })();
 </script>
 
@@ -563,4 +568,5 @@ document.addEventListener('DOMContentLoaded', () => {
   
 </body>
 </html>
+
 
