@@ -104,10 +104,10 @@
 
   <script>
   // stessa formattazione usata in index.html
-  //function formatVersionFromDate(d){
-  //  const p=n=>String(n).padStart(2,'0');
-  //  return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())}-${p(d.getHours())}:${p(d.getMinutes())}`;
-  //}
+  function formatVersionFromDate(d){
+    const p=n=>String(n).padStart(2,'0');
+    return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())}-${p(d.getHours())}:${p(d.getMinutes())}`;
+  }
     
   const vIndex   = formatVersionFromDate(new Date(document.lastModified));
   const urlLista = `lista.html?v=${encodeURIComponent(vIndex)}`;
@@ -431,6 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
 
