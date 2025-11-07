@@ -34,14 +34,34 @@
     .err { color:#b00020; margin-top:8px; }
     .badge { display:inline-block; font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid #aaa; margin-left:8px; }
     .summary { margin-top:10px; font-size:14px; }
+    /* Stile coerente per il filtro stagione */
+  .sel{
+    padding:8px 12px;
+    border:1px solid #ddd;
+    border-radius:10px;
+    background:#fff;
+    font:inherit;
+    line-height:1.2;
+    cursor:pointer;
+  }
+  .sel:focus-visible{ outline:2px solid #2684ff; outline-offset:2px; }
+
   </style>
 </head>
 <body>
-  <header class="toolbar">
+  
+<header class="toolbar">
   <a class="btn" href="index.html" aria-label="Torna all'inserimento">← Nuovo movimento</a>
   <button class="btn" id="refreshBtn" type="button" aria-label="Ricarica elenco">⟳ Ricarica</button>
+
+  <!-- Filtro stagione -->
+  <select id="seasonFilter" class="sel" aria-label="Filtra per stagione" title="Filtra per stagione">
+    <option value="">Tutte le stagioni</option>
+  </select>
+
   <div style="margin-left:auto" class="muted">Versione: <span id="appVersion" class="badge"></span></div>
 </header>
+
 
 
   <h2>📄 Lista movimenti</h2>
@@ -61,30 +81,85 @@
   <div id="summary" class="summary" style="display:none;"></div>
 
 <script>
-/* ─── Endpoint condiviso con index.html ───────────────────── */
 const ENDPOINT = 'https://script.google.com/macros/s/AKfycbwven5iCbDk8Fy0Vw7l7jQL2FHY1kTM05TlnAk8N3yE4-NfDjh052fPSbS7Vr4Qgf7l9A/exec';
 const SECRET   = 'aX4P-92kLq-55T8b-7Hc0Z';
 
-/* Versione come in index.html */
-function formatVersionFromDate(d){ const p=n=>String(n).padStart(2,'0'); return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())}-${p(d.getHours())}:${p(d.getMinutes())}`; }
-function computeAppVersion(){ const qs = new URLSearchParams(location.search); const v = qs.get('v'); if (v) return v; const d = new Date(document.lastModified); return isNaN(d)?'dev':formatVersionFromDate(d); }
+function formatVersionFromDate(d){const p=n=>String(n).padStart(2,'0');return`${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())}-${p(d.getHours())}:${p(d.getMinutes())}`;}
+function computeAppVersion(){
+  const qs = new URLSearchParams(location.search);
+  const v = qs.get('v');
+  if (v) return v;
+  const d = new Date(document.lastModified);
+  return isNaN(d)?'dev':formatVersionFromDate(d);
+}
 document.getElementById('appVersion').textContent = computeAppVersion();
 
-/* Util per formattare € con virgola */
-function euro(x){ return Number(x).toFixed(2).replace('.', ','); }
+function euro(x){return Number(x).toFixed(2).replace('.', ',');}
 
-/* Carica lista */
-async function loadList(){
-  const status = document.getElementById('status');
+let ALL_ROWS = [];
+let FILTER = { stagione: '' };
+
+function populateSeasons(stagioni) {
+  const sel = document.getElementById('seasonFilter');
+  sel.querySelectorAll('option:not([value=""])').forEach(o => o.remove());
+  stagioni.forEach(s => {
+    const opt = document.createElement('option');
+    opt.value = s;
+    opt.textContent = s;
+    sel.appendChild(opt);
+  });
+}
+
+function renderTable() {
   const tbl = document.getElementById('tbl');
   const tbody = tbl.querySelector('tbody');
+  const status = document.getElementById('status');
   const summary = document.getElementById('summary');
 
+  tbody.innerHTML = '';
+  const rows = ALL_ROWS.filter(r => !FILTER.stagione || r.stagione === FILTER.stagione);
+
+  if (rows.length === 0) {
+    tbl.style.display = 'none';
+    summary.style.display = 'none';
+    status.textContent = 'Nessun movimento per il filtro selezionato.';
+    status.className = 'muted';
+    return;
+  }
+
+  let somma = 0, sacchi = 0;
+  for (const r of rows) {
+    const tr = document.createElement('tr');
+    const tdData = document.createElement('td');
+    const tdSacchi = document.createElement('td');
+    const tdTotale = document.createElement('td');
+
+    tdData.textContent = r.data;
+    tdSacchi.textContent = r.num_sacchi;
+    tdTotale.textContent = euro(r.totale);
+
+    tdSacchi.className = 'right';
+    tdTotale.className = 'right';
+
+    tr.appendChild(tdData);
+    tr.appendChild(tdSacchi);
+    tr.appendChild(tdTotale);
+    tbody.appendChild(tr);
+
+    somma += Number(r.totale || 0);
+    sacchi += Number(r.num_sacchi || 0);
+  }
+
+  status.textContent = '';
+  tbl.style.display = 'table';
+  summary.textContent = `Totale movimenti: ${rows.length} • Sacchi: ${sacchi} • Spesa: € ${euro(somma)}`;
+  summary.style.display = 'block';
+}
+
+async function loadList() {
+  const status = document.getElementById('status');
   status.textContent = 'Carico…';
   status.className = 'loading';
-  tbl.style.display = 'none';
-  summary.style.display = 'none';
-  tbody.innerHTML = '';
 
   try {
     const url = new URL(ENDPOINT);
@@ -92,48 +167,12 @@ async function loadList(){
     url.searchParams.set('secret', SECRET);
 
     const res = await fetch(url.toString(), { method:'GET' });
-    if (!res.ok) throw new Error('HTTP '+res.status);
     const json = await res.json();
-    if (!json.ok) throw new Error(json.error || 'Risposta non valida');
+    if (!json.ok) throw new Error(json.error);
 
-    const rows = json.rows || [];
-    if (rows.length === 0) {
-      status.textContent = 'Nessun movimento.';
-      status.className = 'muted';
-      return;
-    }
-
-    // opzionale: ordina per data discendente (assumendo formato YYYY-MM-DD)
-    rows.sort((a,b) => (a.data < b.data ? 1 : -1));
-
-    let somma = 0, sacchi = 0;
-    for (const r of rows) {
-      const tr = document.createElement('tr');
-      const tdData    = document.createElement('td');
-      const tdSacchi  = document.createElement('td');
-      const tdTotale  = document.createElement('td');
-
-      tdData.textContent = r.data;
-      tdSacchi.textContent = r.num_sacchi;
-      tdTotale.textContent = euro(r.totale);
-
-      tdSacchi.className = 'right';
-      tdTotale.className = 'right';
-
-      tr.appendChild(tdData);
-      tr.appendChild(tdSacchi);
-      tr.appendChild(tdTotale);
-      tbody.appendChild(tr);
-
-      somma += Number(r.totale || 0);
-      sacchi += Number(r.num_sacchi || 0);
-    }
-
-    status.textContent = '';
-    status.className = '';
-    tbl.style.display = 'table';
-    summary.textContent = `Totale movimenti: ${rows.length} • Sacchi: ${sacchi} • Spesa: € ${euro(somma)}`;
-    summary.style.display = 'block';
+    ALL_ROWS = json.rows || [];
+    populateSeasons(json.stagioni || []);
+    renderTable();
   } catch (err) {
     status.textContent = 'Errore nel caricamento. Sei offline o non autorizzato.';
     status.className = 'err';
@@ -141,10 +180,15 @@ async function loadList(){
 }
 
 document.getElementById('refreshBtn').addEventListener('click', loadList);
+document.getElementById('seasonFilter').addEventListener('change', e => {
+  FILTER.stagione = e.target.value || '';
+  renderTable();
+});
 
-// Avvio
 document.addEventListener('DOMContentLoaded', loadList);
 </script>
+
 </body>
 </html>
+
 
