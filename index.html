@@ -102,33 +102,39 @@
   })();
 </script>
 
+
   <script>
-  // stessa formattazione usata in index.html
-  function formatVersionFromDate(d){
-    const p=n=>String(n).padStart(2,'0');
-    return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())}-${p(d.getHours())}:${p(d.getMinutes())}`;
-  }
-    
-  const vIndex   = formatVersionFromDate(new Date(document.lastModified));
-  const urlLista = `lista.html?v=${encodeURIComponent(vIndex)}`;
+  document.addEventListener('DOMContentLoaded', () => {
+    // calcolo versione da passare a lista.html
+    const pad = n => String(n).padStart(2,'0');
+    const d = new Date(document.lastModified);
+    const vIndex = isNaN(d) ? 'dev'
+      : `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())}-${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-  // === Link del menu ===
-  const linkLista = document.getElementById('goLista');
-  if (linkLista) {
-    // href per fallback (se aperta in Safari normale)
+    const urlLista = `lista.html?v=${encodeURIComponent(vIndex)}`;
+
+    const linkLista = document.getElementById('goLista');
+    if (!linkLista) return;
+
+    // per sicurezza tieni anche l'href e forza target _self
     linkLista.href = urlLista;
+    linkLista.setAttribute('target', '_self');
 
-    linkLista.addEventListener('click', function (e) {
+    linkLista.addEventListener('click', (e) => {
       e.preventDefault();
-      // Se l'app è aperta da Home (PWA iOS), resta in fullscreen
+      // se è una PWA aperta da Home su iOS, resta *in app*
       if (window.navigator.standalone) {
-        window.location.href = urlLista;  // ✅ niente document.write
+        window.location.href = urlLista;    // ✅ resta full-screen
       } else {
-        window.location.assign(urlLista);
+        window.location.assign(urlLista);   // normale navigazione in Safari
       }
     });
-  }
+  });
 </script>
+
+  
+
+ 
   
   <h2>🔥 Pellet</h2>
 
@@ -431,6 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
 
