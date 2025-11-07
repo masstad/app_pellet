@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="it">
+<html lang="it" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,8 +11,50 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
 
+  <!-- Imposta il tema prima del paint per evitare flash -->
+  <script>
+    (function(){
+      try{
+        const saved = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      }catch(e){}
+    })();
+  </script>
+
   <style>
-    :root { --space:14px; }
+    :root{
+      --space:14px;
+
+      /* Tema chiaro (default) */
+      --bg: #ffffff;
+      --text: #111827;
+      --muted: #666666;
+      --surface: #ffffff;
+      --border: #dddddd;
+      --divider: #eeeeee;
+      --shadow: 0 2px 10px rgba(0,0,0,.08);
+      --btn-hover: #f7f7f7;
+      --spinner-track: rgba(0,0,0,0.2);
+      --spinner-head:  rgba(0,0,0,0.7);
+    }
+
+    html[data-theme="dark"]{
+      --bg: #0f1115;
+      --text: #e5e7eb;
+      --muted: #9aa0a6;
+      --surface: #151922;
+      --border: #2a2f3a;
+      --divider: #222834;
+      --shadow: 0 2px 16px rgba(0,0,0,.35);
+      --btn-hover: #1b2130;
+      --spinner-track: rgba(255,255,255,0.2);
+      --spinner-head:  rgba(255,255,255,0.8);
+    }
+
+    /* Aiuta form controls nativi a seguire il tema */
+    body{ color-scheme: light dark; }
 
     /* === Reset e contenitore pagina ======================================= */
     * { box-sizing: border-box; }
@@ -24,7 +66,8 @@
       flex-direction:column;
       padding: var(--space);
       font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      background:#fff;
+      background: var(--bg);
+      color: var(--text);
     }
 
     h2 { margin: 0 0 10px; }
@@ -36,6 +79,9 @@
       max-width: 100%;
       font-size: 16px;
       padding: 10px;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--border);
     }
 
     /* Forza il campo DATA a comportarsi come gli altri anche su iOS */
@@ -46,16 +92,20 @@
     }
 
     button {
-      margin-top: 16px; border-radius: 10px; border: 1px solid #ddd;
+      margin-top: 16px; border-radius: 10px;
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
       cursor: pointer;
+      box-shadow: var(--shadow);
+      background: var(--surface);
     }
-    .ok { color: green; margin-top: 8px; }
-    .err { color: #b00020; margin-top: 8px; }
+    button:hover{ background: var(--btn-hover); }
+
+    .ok { color: #22c55e; margin-top: 8px; }
+    .err { color: #ef4444; margin-top: 8px; }
 
     /* Footer versione: centrato e appoggiato in basso */
     .muted {
-      color: #666; font-size: 12px;
+      color: var(--muted); font-size: 12px;
       text-align:center;
       margin-top:auto;                /* spinge il blocco in fondo */
       width:100%;
@@ -63,7 +113,7 @@
     }
     .badge {
       display: inline-block; font-size: 12px; padding: 2px 8px;
-      border-radius: 999px; border: 1px solid #aaa; margin-left: 8px;
+      border-radius: 999px; border: 1px solid var(--border); margin-left: 8px;
       font-variant-numeric: tabular-nums;
     }
 
@@ -71,7 +121,7 @@
     .loading-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(255,255,255,0.75);
+      background: rgba(0,0,0,0.15);
       display: none;
       align-items: center;
       justify-content: center;
@@ -81,8 +131,8 @@
     .loading-overlay[aria-hidden="false"] { display: flex; }
     .spinner {
       width: 38px; height: 38px;
-      border: 3px solid rgba(0,0,0,0.2);
-      border-top-color: rgba(0,0,0,0.7);
+      border: 3px solid var(--spinner-track);
+      border-top-color: var(--spinner-head);
       border-radius: 50%;
       animation: spin 0.9s linear infinite;
     }
@@ -91,12 +141,12 @@
     /* ───────── Spinner inline sul bottone ───────── */
     .btn-spinner {
       width: 16px; height: 16px;
-      border: 2px solid rgba(0,0,0,0.2);
-      border-top-color: rgba(0,0,0,0.7);
+      border: 2px solid var(--spinner-track);
+      border-top-color: var(--spinner-head);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
-    button[disabled] { opacity: 0.7; cursor: not-allowed; }
+    button[disabled] { opacity: 0.7; cursor: not-allowed; box-shadow: none; }
 
     /* Topbar a 3 colonne: [hamburger][titolo centrato][spazio] */
     .topbar{
@@ -116,6 +166,7 @@
       line-height:1;
       padding:8px 12px;
       cursor:pointer;
+      color: var(--text);
     }
 
     .title{
@@ -130,11 +181,26 @@
     }
 
     /* Drawer look & feel */
-    #drawer a{
+    #drawer{
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+    }
+    #drawer a, #drawer button.linklike{
       text-decoration: none;      /* niente sottolineato */
       color: inherit;
       display: inline-block;
       padding: 8px 0;
+      background: none;
+      border: none;
+      font: inherit;
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+    }
+    #drawer hr{
+      border: 0;
+      border-top: 1px solid var(--divider);
+      margin: 10px 0;
     }
 
     /* Bottone chiudi drawer (comodissimo mano sinistra) */
@@ -147,11 +213,13 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid #ddd;
+      border: 1px solid var(--border);
       border-radius: 999px;
-      background: #fff;
+      background: var(--surface);
+      color: var(--text);
       font-size: 18px;
       cursor: pointer;
+      box-shadow: var(--shadow);
     }
     #drawerClose:active{ transform: translateY(1px); }
     #drawerClose:focus-visible{ outline: 2px solid #2684ff; outline-offset: 2px; }
@@ -163,19 +231,16 @@
       bottom: calc(12px + env(safe-area-inset-bottom)); /* no collision con home bar iOS */
       width: 48px; height: 48px;
       display: inline-flex; align-items: center; justify-content: center;
-      border: 1px solid #ddd; border-radius: 999px; background: #fff;
+      border: 1px solid var(--border); border-radius: 999px; background: var(--surface);
+      color: var(--text);
       font-size: 22px; line-height: 1; cursor: pointer;
-      box-shadow: 0 2px 10px rgba(0,0,0,.08);
+      box-shadow: var(--shadow);
       z-index: 10000; /* sopra il contenuto, sotto l’iframe full-screen */
+      transition: opacity .15s ease, transform .15s ease;
     }
     .fab-menu:active{ transform: translateY(1px); }
     .fab-menu:focus-visible{ outline: 2px solid #2684ff; outline-offset: 2px; }
 
-    /* transizione morbida */
-    .fab-menu{
-      transition: opacity .15s ease, transform .15s ease;
-    }
-    
     /* nascondi quando il drawer è aperto o l’iframe è in overlay */
     body.drawer-open .fab-menu,
     body.frame-open .fab-menu{
@@ -183,7 +248,6 @@
       pointer-events: none;
       transform: translateY(8px);
     }
-    
   </style>
 </head>
 
@@ -198,12 +262,13 @@
 
 <!-- Drawer semplice -->
 <nav id="drawer" style="
-  position:fixed;inset:0 35% 0 0;max-width:280px;background:#fff;border-right:1px solid #eee;
+  position:fixed;inset:0 35% 0 0;max-width:280px;
   transform:translateX(-105%);transition:transform .2s ease;z-index:9998;padding:16px;">
   <h3 style="margin-top:0;">Menu</h3>
   <ul style="list-style:none;padding:0;margin:0;">
-    <!-- icona rimossa -->
     <li><a id="goLista" href="#">Lista movimenti</a></li>
+    <hr>
+    <li><button id="themeToggle" class="linklike" type="button">🌙 Tema scuro</button></li>
   </ul>
 
   <!-- nuovo: pulsante “torna indietro/chiudi” in basso a sinistra -->
@@ -212,38 +277,70 @@
 <div id="backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,.15);display:none;z-index:9997;"></div>
 <button id="menuBtnBottom" class="fab-menu" aria-label="Apri menu" title="Menu">☰</button>
 
-
 <script>
-  // Drawer toggle
+  // Drawer toggle + Theme toggle helpers
   (function(){
     const btn = document.getElementById('menuBtn');
     const btnBottom = document.getElementById('menuBtnBottom');
     const drawer = document.getElementById('drawer');
     const backdrop = document.getElementById('backdrop');
-    
+
+    function updateThemeToggleLabel(){
+      const el = document.getElementById('themeToggle');
+      if(!el) return;
+      const t = document.documentElement.getAttribute('data-theme') || 'light';
+      el.textContent = (t === 'dark') ? '☀️ Tema chiaro' : '🌙 Tema scuro';
+    }
+
+    function setTheme(t){
+      document.documentElement.setAttribute('data-theme', t);
+      try { localStorage.setItem('theme', t); } catch(e){}
+      updateThemeToggleLabel();
+    }
+
+    // Inizializza etichetta del toggle tema dopo il primo paint
+    updateThemeToggleLabel();
+
     const open = () => {
       drawer.style.transform='translateX(0)';
       backdrop.style.display='block';
-      document.body.classList.add('drawer-open');      // 👈 NEW
+      document.body.classList.add('drawer-open');
     };
     const close= () => {
       drawer.style.transform='translateX(-105%)';
       backdrop.style.display='none';
-      document.body.classList.remove('drawer-open');   // 👈 NEW
+      document.body.classList.remove('drawer-open');
     };
 
-    btn.addEventListener('click', open);
+    if (btn) btn.addEventListener('click', open);
     if (btnBottom) btnBottom.addEventListener('click', open);
     backdrop.addEventListener('click', close);
 
     // chiusura dal bottone “←” in basso a sinistra
     const drawerClose = document.getElementById('drawerClose');
     if (drawerClose) drawerClose.addEventListener('click', close);
+
+    // Toggle tema nel drawer
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle){
+      themeToggle.addEventListener('click', () => {
+        const curr = document.documentElement.getAttribute('data-theme') || 'light';
+        setTheme(curr === 'dark' ? 'light' : 'dark');
+      });
+    }
+
+    // Se l'utente cambia preferenze di sistema al volo e non ha salvato un tema custom
+    try {
+      const mql = window.matchMedia('(prefers-color-scheme: dark)');
+      mql.addEventListener?.('change', (e) => {
+        const saved = localStorage.getItem('theme');
+        if (!saved) setTheme(e.matches ? 'dark' : 'light');
+      });
+    } catch(e){}
   })();
 </script>
 
-
-  <script>
+<script>
 document.addEventListener('DOMContentLoaded', () => {
   const pad = n => String(n).padStart(2,'0');
   const d = new Date(document.lastModified);
@@ -599,22 +696,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // Primo tentativo di calcolo (se i campi sono già valorizzati)
   recomputeTotalIfNeeded();
 });
-
 </script>
 
 <!-- Overlay pagina secondaria -->
 <iframe id="pageFrame" style="
   position:fixed; inset:0; width:100vw; height:100vh; border:0;
-  display:none; background:#fff; z-index:9999;
+  display:none; background:var(--bg); z-index:9999;
 "></iframe>
 
-  <script>addEventListener('pageshow', e => e.persisted && location.reload());</script>
+<script>addEventListener('pageshow', e => e.persisted && location.reload());</script>
 
-  
 </body>
 </html>
-
-
-
-
-
