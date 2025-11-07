@@ -104,38 +104,62 @@
 
 
   <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // calcolo versione da passare a lista.html
-    const pad = n => String(n).padStart(2,'0');
-    const d = new Date(document.lastModified);
-    const vIndex = isNaN(d) ? 'dev'
-      : `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())}-${pad(d.getHours())}:${pad(d.getMinutes())}`;
+document.addEventListener('DOMContentLoaded', () => {
+  const pad = n => String(n).padStart(2,'0');
+  const d = new Date(document.lastModified);
+  const vIndex = isNaN(d) ? 'dev'
+    : `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())}-${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
-    const urlLista = `lista.html?v=${encodeURIComponent(vIndex)}`;
+  const urlLista = `lista.html?v=${encodeURIComponent(vIndex)}`;
 
-    const linkLista = document.getElementById('goLista');
-    if (!linkLista) return;
+  const linkLista = document.getElementById('goLista');
+  const frame     = document.getElementById('pageFrame');
+  const drawer    = document.getElementById('drawer');
+  const backdrop  = document.getElementById('backdrop');
 
-    // per sicurezza tieni anche l'href e forza target _self
-    linkLista.href = urlLista;
-    linkLista.setAttribute('target', '_self');
+  function openFrame(url){
+    // chiudi il drawer, mostra l’iframe a schermo intero
+    if (drawer)  drawer.style.transform = 'translateX(-105%)';
+    if (backdrop) backdrop.style.display = 'none';
 
+    frame.src = url;
+    frame.style.display = 'block';
+
+    // gestisci cronologia: Back chiude l’iframe
+    history.pushState({page:'lista'}, '', '#lista');
+  }
+
+  function closeFrame(){
+    frame.style.display = 'none';
+    frame.src = 'about:blank';
+    if (location.hash === '#lista') history.back();
+  }
+
+  // intercetta click su “Lista movimenti”
+  if (linkLista) {
+    linkLista.href = urlLista;              // fallback, se aperto in Safari normale
+    linkLista.setAttribute('target','_self');
     linkLista.addEventListener('click', (e) => {
       e.preventDefault();
-      // se è una PWA aperta da Home su iOS, resta *in app*
-      if (window.navigator.standalone) {
-        window.location.href = urlLista;    // ✅ resta full-screen
-      } else {
-        window.location.assign(urlLista);   // normale navigazione in Safari
-      }
+      openFrame(urlLista);                  // ✅ sempre full-screen, niente Safari
     });
+  }
+
+  // Back fisico (swipe indietro o ←) chiude l’iframe
+  window.addEventListener('popstate', () => {
+    if (frame.style.display === 'block') {
+      frame.style.display = 'none';
+      frame.src = 'about:blank';
+    }
   });
+
+  // Consenti a lista.html di chiedere "chiudi" (vedi step 3)
+  window.addEventListener('message', (ev) => {
+    if (ev && ev.data === 'close-lista') closeFrame();
+  });
+});
 </script>
 
-  
-
- 
-  
   <h2>🔥 Pellet</h2>
 
   <label>Data</label>
@@ -435,8 +459,17 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 </script>
+
+<!-- Overlay pagina secondaria -->
+<iframe id="pageFrame" style="
+  position:fixed; inset:0; width:100vw; height:100vh; border:0;
+  display:none; background:#fff; z-index:9999;
+"></iframe>
+
+  
 </body>
 </html>
+
 
 
 
