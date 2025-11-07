@@ -84,7 +84,7 @@
   transform:translateX(-105%);transition:transform .2s ease;z-index:9998;padding:16px;">
   <h3 style="margin-top:0;">Menu</h3>
   <ul style="list-style:none;padding:0;margin:0;">
-    <li><a id="goLista" href="lista.html">📄 Lista movimenti</a></li>
+    <li><a id="goLista" href="#">📄 Lista movimenti</a></li>
   </ul>
 </nav>
 <div id="backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,.15);display:none;z-index:9997;"></div>
@@ -110,20 +110,28 @@
   }
   // versione della index, basata sul suo lastModified
   const vIndex = formatVersionFromDate(new Date(document.lastModified));
-  const link = document.getElementById('goLista');
+  //const link = document.getElementById('goLista');
+  const urlLista = `lista.html?v=${encodeURIComponent(vIndex)}`;
 
-  if (link) {
-    // 1️⃣ imposta l'href con la versione, utile anche su GitHub Pages
-    const urlLista = `lista.html?v=${encodeURIComponent(vIndex)}`;
-    link.href = urlLista;
+  if (linkLista) {
+    linkLista.addEventListener('click', async (e) => {
+      e.preventDefault();
 
-    // 2️⃣ intercetta il click quando l'app è aperta come "app" (standalone)
-    link.addEventListener('click', function (e) {
-      if (window.navigator.standalone) { // true solo se aperta da Home su iPhone
-        e.preventDefault();
-        window.location.href = urlLista; // apre dentro l'app, fullscreen
+      // 🔹 Mostra un piccolo loader (facoltativo)
+      document.body.innerHTML = '<div style="text-align:center;margin-top:30vh;font-family:sans-serif;">Caricamento lista movimenti...</div>';
+
+      // 🔹 Recupera e mostra la lista.html dentro la stessa webapp
+      try {
+        const res = await fetch(urlLista);
+        if (!res.ok) throw new Error(res.status);
+        const html = await res.text();
+        document.open();
+        document.write(html);
+        document.close();
+      } catch (err) {
+        alert('Errore nel caricamento della lista.');
+        window.location.reload();
       }
-      // se non è standalone, Safari gestirà il link normalmente
     });
   }
 </script>
@@ -429,6 +437,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
 
