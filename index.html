@@ -65,17 +65,41 @@
       animation: spin 0.8s linear infinite;
     }
     button[disabled] { opacity: 0.7; cursor: not-allowed; }
+
+.topbar{
+  position: relative;
+  height: 44px;               /* altezza fissa comoda su mobile */
+  display: flex;
+  align-items: center;
+  justify-content: center;    /* centra il titolo orizzontalmente */
+  margin-bottom: 14px;
+}
+.topbar .menu-btn{
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);  /* centra verticalmente il bottone */
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+.topbar .title{
+  margin: 0;
+  font-size: 20px;
+  line-height: 1;
+  text-align: center;
+  width: 100%;
+}
+
+    
   </style>
 </head>
 
 <body>
 
   <!-- ─── Top bar con hamburger ─────────────────────────────── -->
-<header style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-  <button id="menuBtn" aria-label="Apri menu" style="width:auto;padding:8px 10px;border-radius:8px;">
-    ☰
-  </button>
-  <h2 style="margin:0;">🔥 Pellet</h2>
+<header class="topbar">
+  <button id="menuBtn" class="menu-btn" aria-label="Apri menu">☰</button>
+  <h2 class="title">🔥 Pellet</h2>
 </header>
 
 <!-- Drawer semplice -->
@@ -159,8 +183,6 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
-
-  <h2>🔥 Pellet</h2>
 
   <label>Data</label>
   <input id="data" type="date" required>
@@ -469,6 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
 </body>
 </html>
+
 
 
 
