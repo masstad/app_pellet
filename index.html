@@ -204,8 +204,10 @@
   // Drawer toggle
   (function(){
     const btn = document.getElementById('menuBtn');
+    const btnBottom = document.getElementById('menuBtnBottom');
     const drawer = document.getElementById('drawer');
     const backdrop = document.getElementById('backdrop');
+    
     const open = () => { drawer.style.transform='translateX(0)'; backdrop.style.display='block'; };
     const close= () => { drawer.style.transform='translateX(-105%)'; backdrop.style.display='none'; };
 
@@ -586,6 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
 </body>
 </html>
+
 
 
 
