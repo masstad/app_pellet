@@ -66,34 +66,35 @@
     }
     button[disabled] { opacity: 0.7; cursor: not-allowed; }
 
-/* Barra superiore: hamburger a sinistra, titolo centrato */
-.topbar {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;      /* centra il titolo rispetto alla pagina */
-  margin-bottom: 14px;
-  height: 48px;                 /* altezza fissa gradevole */
+/* Topbar a 3 colonne: [hamburger][titolo centrato][spazio] */
+.topbar{
+  display:grid;
+  grid-template-columns: 48px 1fr 48px; /* sinistra / centro / destra */
+  align-items:center;
+  height:48px;
+  margin-bottom:14px;
 }
 
-.menu-btn {
-  position: absolute;
-  left: 0;                      /* resta appiccicato a sinistra */
-  top: 50%;
-  transform: translateY(-50%);
-  background: none;
-  border: none;
-  font-size: 22px;
-  line-height: 1;
-  padding: 8px 12px;
-  cursor: pointer;
+.menu-btn{
+  grid-column:1;                /* colonna sinistra */
+  justify-self:start;
+  background:none;
+  border:none;
+  font-size:22px;
+  line-height:1;
+  padding:8px 12px;
+  cursor:pointer;
 }
 
-.title {
-  margin: 0;
-  font-size: 22px;
-  text-align: center;
-  width: 100%;                  /* serve per mantenerlo centrato anche con bottone assoluto */
+.title{
+  grid-column:2;                /* colonna centrale */
+  margin:0;
+  text-align:center;            /* centrato rispetto alla pagina */
+  font-size:22px;
+}
+
+.right-slot{
+  grid-column:3;                /* colonna destra “vuota” per bilanciare */
 }
 
   </style>
@@ -105,6 +106,7 @@
 <header class="topbar">
   <button id="menuBtn" class="menu-btn" aria-label="Apri menu">☰</button>
   <h2 class="title">🔥 Pellet</h2>
+  <span class="right-slot" aria-hidden="true"></span>
 </header>
 
 <!-- Drawer semplice -->
@@ -496,6 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
 </body>
 </html>
+
 
 
 
