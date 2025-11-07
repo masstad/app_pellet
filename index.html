@@ -13,15 +13,38 @@
 
   <style>
     :root { --space:14px; }
-    body {
+
+    /* === Reset e contenitore pagina ======================================= */
+    * { box-sizing: border-box; }
+    html, body { width:100%; max-width:100%; overflow-x:hidden; margin:0; }
+    /* body in modalità “app”: footer sempre in fondo */
+    body.app{
+      min-height:100dvh;
+      display:flex;
+      flex-direction:column;
+      padding: var(--space);
       font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      margin: var(--space);
+      background:#fff;
     }
+
     h2 { margin: 0 0 10px; }
+
     label { display: block; margin: 12px 0 6px; font-size: 14px; }
+
     input, button {
-      width: 100%; font-size: 16px; padding: 10px; box-sizing: border-box;
+      width: 100%;
+      max-width: 100%;
+      font-size: 16px;
+      padding: 10px;
     }
+
+    /* Forza il campo DATA a comportarsi come gli altri anche su iOS */
+    input[type="date"]{
+      -webkit-appearance: none;
+      appearance: none;
+      min-width: 0;            /* evita min-content che “spinge” a destra */
+    }
+
     button {
       margin-top: 16px; border-radius: 10px; border: 1px solid #ddd;
       display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -29,10 +52,19 @@
     }
     .ok { color: green; margin-top: 8px; }
     .err { color: #b00020; margin-top: 8px; }
-    .muted { color: #666; font-size: 12px; margin-top: 6px; }
+
+    /* Footer versione: centrato e appoggiato in basso */
+    .muted {
+      color: #666; font-size: 12px;
+      text-align:center;
+      margin-top:auto;                /* spinge il blocco in fondo */
+      width:100%;
+      padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+    }
     .badge {
       display: inline-block; font-size: 12px; padding: 2px 8px;
       border-radius: 999px; border: 1px solid #aaa; margin-left: 8px;
+      font-variant-numeric: tabular-nums;
     }
 
     /* ───────── Loader overlay ───────── */
@@ -66,41 +98,40 @@
     }
     button[disabled] { opacity: 0.7; cursor: not-allowed; }
 
-/* Topbar a 3 colonne: [hamburger][titolo centrato][spazio] */
-.topbar{
-  display:grid;
-  grid-template-columns: 48px 1fr 48px; /* sinistra / centro / destra */
-  align-items:center;
-  height:48px;
-  margin-bottom:14px;
-}
+    /* Topbar a 3 colonne: [hamburger][titolo centrato][spazio] */
+    .topbar{
+      display:grid;
+      grid-template-columns: 48px 1fr 48px; /* sinistra / centro / destra */
+      align-items:center;
+      height:48px;
+      margin-bottom:14px;
+    }
 
-.menu-btn{
-  grid-column:1;                /* colonna sinistra */
-  justify-self:start;
-  background:none;
-  border:none;
-  font-size:22px;
-  line-height:1;
-  padding:8px 12px;
-  cursor:pointer;
-}
+    .menu-btn{
+      grid-column:1;                /* colonna sinistra */
+      justify-self:start;
+      background:none;
+      border:none;
+      font-size:22px;
+      line-height:1;
+      padding:8px 12px;
+      cursor:pointer;
+    }
 
-.title{
-  grid-column:2;                /* colonna centrale */
-  margin:0;
-  text-align:center;            /* centrato rispetto alla pagina */
-  font-size:22px;
-}
+    .title{
+      grid-column:2;                /* colonna centrale */
+      margin:0;
+      text-align:center;            /* centrato rispetto alla pagina */
+      font-size:22px;
+    }
 
-.right-slot{
-  grid-column:3;                /* colonna destra “vuota” per bilanciare */
-}
-
+    .right-slot{
+      grid-column:3;                /* colonna destra “vuota” per bilanciare */
+    }
   </style>
 </head>
 
-<body>
+<body class="app">
 
   <!-- ─── Top bar con hamburger ─────────────────────────────── -->
 <header class="topbar">
@@ -500,17 +531,3 @@ document.addEventListener('DOMContentLoaded', () => {
   
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
