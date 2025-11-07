@@ -104,34 +104,27 @@
 
   <script>
   // stessa formattazione usata in index.html
-  function formatVersionFromDate(d){
-    const p=n=>String(n).padStart(2,'0');
-    return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())}-${p(d.getHours())}:${p(d.getMinutes())}`;
-  }
-  // versione della index, basata sul suo lastModified
-  const vIndex = formatVersionFromDate(new Date(document.lastModified));
+  //function formatVersionFromDate(d){
+  //  const p=n=>String(n).padStart(2,'0');
+  //  return `${d.getFullYear()}.${p(d.getMonth()+1)}.${p(d.getDate())}-${p(d.getHours())}:${p(d.getMinutes())}`;
+  //}
+    
+  const vIndex   = formatVersionFromDate(new Date(document.lastModified));
   const urlLista = `lista.html?v=${encodeURIComponent(vIndex)}`;
 
+  // === Link del menu ===
   const linkLista = document.getElementById('goLista');
-
   if (linkLista) {
-    linkLista.addEventListener('click', async (e) => {
+    // href per fallback (se aperta in Safari normale)
+    linkLista.href = urlLista;
+
+    linkLista.addEventListener('click', function (e) {
       e.preventDefault();
-
-      // 🔹 Mostra un piccolo loader (facoltativo)
-      document.body.innerHTML = '<div style="text-align:center;margin-top:30vh;font-family:sans-serif;">Caricamento lista movimenti...</div>';
-
-      // 🔹 Recupera e mostra la lista.html dentro la stessa webapp
-      try {
-        const res = await fetch(urlLista);
-        if (!res.ok) throw new Error(res.status);
-        const html = await res.text();
-        document.open();
-        document.write(html);
-        document.close();
-      } catch (err) {
-        alert('Errore nel caricamento della lista.');
-        window.location.reload();
+      // Se l'app è aperta da Home (PWA iOS), resta in fullscreen
+      if (window.navigator.standalone) {
+        window.location.href = urlLista;  // ✅ niente document.write
+      } else {
+        window.location.assign(urlLista);
       }
     });
   }
@@ -438,6 +431,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
 
 
 
