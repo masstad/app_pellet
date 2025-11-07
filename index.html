@@ -66,31 +66,36 @@
     }
     button[disabled] { opacity: 0.7; cursor: not-allowed; }
 
-.topbar{
+/* Barra superiore: hamburger a sinistra, titolo centrato */
+.topbar {
   position: relative;
-  height: 44px;               /* altezza fissa comoda su mobile */
   display: flex;
   align-items: center;
-  justify-content: center;    /* centra il titolo orizzontalmente */
+  justify-content: center;      /* centra il titolo rispetto alla pagina */
   margin-bottom: 14px;
-}
-.topbar .menu-btn{
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);  /* centra verticalmente il bottone */
-  padding: 8px 10px;
-  border-radius: 8px;
-}
-.topbar .title{
-  margin: 0;
-  font-size: 20px;
-  line-height: 1;
-  text-align: center;
-  width: 100%;
+  height: 48px;                 /* altezza fissa gradevole */
 }
 
-    
+.menu-btn {
+  position: absolute;
+  left: 0;                      /* resta appiccicato a sinistra */
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 22px;
+  line-height: 1;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  text-align: center;
+  width: 100%;                  /* serve per mantenerlo centrato anche con bottone assoluto */
+}
+
   </style>
 </head>
 
@@ -491,6 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
 </body>
 </html>
+
 
 
 
